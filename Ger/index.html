@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Waves by ClearWay – Resident Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- ┌──────────────────────────────────────────────────────────────────┐
+     │  WAVES BY CLEARWAY - Resident NFC Persona Card                  │
+     │                                                                  │
+     │  CONFIG: edit the constants below per event / resident.         │
+     │                                                                  │
+     │  RESIDENT_NAME  : first name shown in the notification          │
+     │  EVENT_NAME     : short event name shown in notification        │
+     │  EVENT_MINUTES  : how many minutes until event ends             │
+     │  CARD_PNG_URL   : front face of physical NFC card               │
+     │  CARD_BACK_PNG_URL : rear face of physical NFC card             │
+     │  LEAVE_VIDEO_URL: YouTube embed or local .mp4 path              │
+     └──────────────────────────────────────────────────────────────────┘ -->
+<script>
+const RESIDENT_NAME      = 'Sarah';
+const EVENT_NAME         = 'Ireland vs Italy';
+const EVENT_MINUTES      = 5;
+const NOTIFICATION_ICON  = 'images/icon';          /* path without extension */
+const CARD_PNG_URL       = 'images/Card.png';
+const CARD_BACK_PNG_URL  = 'images/Card_Back.png';
+const LEAVE_VIDEO_URL    = 'images/persona_commuter.mp4';
+</script>
+
+<style>
+/* ─── TOKENS ───────────────────────────────────────────────── */
+:root {
+  --accent:   #8B5CF6;
+  --accent2:  #22D3EE;
+  --bg:       #F7F7F8;
+  --surface:  #ffffff;
+  --surface2: #F0F2F8;
+  --border:   #E2E4EE;
+  --text:     #111111;
+  --muted:    #555555;
+  --muted2:   #888899;
+}
+
+/* ─── RESET ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg); color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ─── SCREEN SYSTEM ────────────────────────────────────────── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  transition: opacity .4s ease, transform .4s ease;
+  will-change: opacity, transform;
+}
+.screen.hidden  { opacity: 0; pointer-events: none; transform: translateY(16px); }
+.screen.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+/* ─── SCREEN 0: CARD FLIP ──────────────────────────────────── */
+#screen-card {
+  background: var(--bg);
+  align-items: center; justify-content: center;
+}
+.card-scene {
+  perspective: 1400px;
+  width: min(340px, 88vw);
+  height: min(520px, 70vh);
+  cursor: pointer;
+}
+.card-inner {
+  width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .65s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.card-inner.flipped { transform: rotateY(180deg); }
+.card-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 22px; overflow: hidden;
+}
+.card-front {
+  box-shadow: 0 24px 60px rgba(0,0,0,.15), 0 0 0 1px rgba(0,0,0,.06);
+  background: var(--surface2);
+}
+.card-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+
+/* ─── SCREEN 1: LOCK SCREEN ────────────────────────────────── */
+#screen-lock {
+  background: transparent;
+  align-items: center; justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Blurred wallpaper backdrop */
+.lock-wallpaper {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    linear-gradient(160deg,
+      #1a1040 0%,
+      #0d1a3a 35%,
+      #0a2a1a 70%,
+      #1a0d30 100%);
+  overflow: hidden;
+}
+.lock-wallpaper::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(139,92,246,.35) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, rgba(34,211,238,.25) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 50% 10%, rgba(59,130,246,.2) 0%, transparent 70%);
+}
+/* subtle animated stars */
+.lock-stars {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 15% 12%, rgba(255,255,255,.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 42% 8%,  rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 22%, rgba(255,255,255,.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 88% 5%,  rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 5%  60%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 55%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 92% 40%, rgba(255,255,255,.7) 0%, transparent 100%);
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  0%   { opacity: .6; }
+  100% { opacity: 1; }
+}
+
+/* Lock screen status bar */
+.lock-statusbar {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: max(14px, env(safe-area-inset-top)) 20px 0;
+  width: 100%;
+}
+.lock-time-main {
+  position: relative; z-index: 2;
+  text-align: center; width: 100%;
+  padding: 28px 20px 0;
+}
+.lock-time-big {
+  font-size: clamp(4rem, 18vw, 5.5rem);
+  font-weight: 200;
+  color: rgba(255,255,255,.95);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-family: 'DM Sans', sans-serif;
+}
+.lock-date-line {
+  font-size: .9rem;
+  color: rgba(255,255,255,.65);
+  margin-top: .3rem;
+  letter-spacing: .02em;
+}
+
+/* Notification card */
+.lock-notifications {
+  position: relative; z-index: 2;
+  width: 100%; padding: 0 14px;
+  margin-top: 28px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.notif-card {
+  width: 100%;
+  background: rgba(255,255,255,.18);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 18px;
+  padding: 13px 14px;
+  display: flex; gap: 11px; align-items: flex-start;
+  box-shadow: 0 8px 32px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
+  opacity: 0;
+  transform: translateY(-18px) scale(.97);
+  transition: opacity .55s cubic-bezier(.22,1,.36,1), transform .55s cubic-bezier(.22,1,.36,1);
+}
+.notif-card.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* pulsing ring on icon */
+.notif-icon-wrap {
+  position: relative; flex-shrink: 0;
+  width: 40px; height: 40px;
+}
+.notif-icon-wrap::before {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: 14px;
+  background: rgba(139,92,246,.35);
+  animation: iconPulse 2.2s ease-in-out infinite;
+}
+@keyframes iconPulse {
+  0%,100% { transform: scale(1); opacity: .5; }
+  50%      { transform: scale(1.15); opacity: 1; }
+}
+.notif-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+.notif-icon-fallback {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+  position: relative; z-index: 1;
+}
+
+.notif-body { flex: 1; min-width: 0; }
+.notif-app-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 2px;
+}
+.notif-app-name {
+  font-size: .62rem; font-weight: 600;
+  color: rgba(255,255,255,.55);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.notif-time-ago {
+  font-size: .62rem;
+  color: rgba(255,255,255,.4);
+}
+.notif-title {
+  font-size: .85rem; font-weight: 700;
+  color: rgba(255,255,255,.95);
+  line-height: 1.25;
+  margin-bottom: 3px;
+}
+.notif-message {
+  font-size: .75rem;
+  color: rgba(255,255,255,.72);
+  line-height: 1.45;
+}
+
+/* Notification action buttons (expandable) */
+.notif-actions {
+  display: none;
+  gap: 8px;
+  padding: 10px 14px 13px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  margin-top: 10px;
+  width: 100%;
+}
+.notif-card.expanded .notif-actions { display: flex; }
+.notif-action-btn {
+  flex: 1; padding: .55rem .5rem;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .78rem; font-weight: 600;
+  color: rgba(255,255,255,.9);
+  cursor: pointer;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.notif-action-btn:active { background: rgba(255,255,255,.22); }
+.notif-action-btn.primary {
+  background: linear-gradient(135deg, rgba(139,92,246,.7), rgba(34,211,238,.5));
+  border-color: rgba(139,92,246,.4);
+}
+
+/* swipe hint */
+.lock-swipe-hint {
+  position: relative; z-index: 2;
+  text-align: center; margin-top: auto;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
+}
+.lock-swipe-line {
+  width: 42px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,.3);
+  margin: 0 auto 10px;
+}
+.lock-swipe-text {
+  font-size: .7rem; color: rgba(255,255,255,.45); letter-spacing: .05em;
+}
+
+/* FaceID ring animation for a moment before showing notification */
+.faceid-ring {
+  position: relative; z-index: 2;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.2);
+  margin: 20px auto 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.faceid-ring.show { opacity: 1; }
+.faceid-ring::before {
+  content: '';
+  position: absolute; inset: -6px; border-radius: 50%;
+  border: 1.5px solid rgba(139,92,246,.5);
+  animation: faceIdScan 1.6s ease-in-out infinite;
+}
+@keyframes faceIdScan {
+  0%   { transform: scale(.8); opacity: 0; }
+  50%  { opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+.faceid-icon { font-size: 1.2rem; opacity: .6; }
+
+/* status bar icons */
+.sb-time { font-size: .75rem; font-weight: 600; color: rgba(255,255,255,.9); }
+.sb-icons { display: flex; gap: 4px; align-items: center; }
+.sb-icon { font-size: .7rem; color: rgba(255,255,255,.8); }
+
+/* ─── SCREEN 2: VIDEO ──────────────────────────────────────── */
+#screen-video {
+  background: #000; align-items: center; justify-content: center;
+}
+.video-wrap {
+  width: 100%; flex: 1; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.video-placeholder {
+  width: 100%; max-width: 420px; padding: 2rem 1.5rem;
+  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+.video-placeholder-icon { font-size: 3.5rem; opacity: .4; }
+.video-placeholder-text { font-size: .85rem; color: rgba(255,255,255,.4); line-height: 1.6; max-width: 280px; }
+.video-placeholder-code {
+  font-size: .72rem; color: var(--accent); font-family: monospace;
+  background: rgba(139,92,246,.1); padding: .3rem .75rem;
+  border-radius: 6px; border: 1px solid rgba(139,92,246,.25);
+  text-align: left; white-space: pre; overflow-x: auto; width: 100%;
+}
+.video-iframe { width: 100%; height: 56vw; max-height: 70vh; border: none; }
+.video-footer {
+  width: 100%; padding: 1rem;
+  background: rgba(0,0,0,.7); border-top: 1px solid rgba(255,255,255,.1);
+  display: flex; gap: .6rem;
+}
+.video-btn {
+  flex: 1; padding: .65rem;
+  border-radius: 8px; font-family: 'DM Sans', sans-serif;
+  font-size: .8rem; font-weight: 600; cursor: pointer; border: none;
+}
+.video-btn-secondary { background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); }
+.video-btn-primary   { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+
+/* ─── MISC ANIMATIONS ──────────────────────────────────────── */
+@keyframes cardPulse {
+  0%,100% { box-shadow: 0 6px 20px rgba(139,92,246,.4); }
+  50%      { box-shadow: 0 6px 28px rgba(34,211,238,.5); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 0 – NFC Card Flip
+═══════════════════════════════════════════════════ -->
+<div id="screen-card" class="screen visible">
+  <div class="card-scene" onclick="flipCard()">
+    <div class="card-inner" id="cardInner">
+      <div class="card-face card-front">
+        <div id="cardPngArea" style="width:100%;height:100%;"></div>
+      </div>
+      <div class="card-face card-back">
+        <div id="cardBackPngArea" style="width:100%;height:100%;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1 – Phone Lock Screen with Notification
+═══════════════════════════════════════════════════ -->
+<div id="screen-lock" class="screen hidden">
+
+  <!-- Wallpaper -->
+  <div class="lock-wallpaper">
+    <div class="lock-stars"></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="lock-statusbar">
+    <span class="sb-time" id="lockStatusTime">00:00</span>
+    <div class="sb-icons">
+      <span class="sb-icon">●●●●</span>
+      <span class="sb-icon">WiFi</span>
+      <span class="sb-icon">🔋</span>
+    </div>
+  </div>
+
+  <!-- Clock -->
+  <div class="lock-time-main">
+    <div class="lock-time-big" id="lockTimeBig">00:00</div>
+    <div class="lock-date-line" id="lockDateLine">Monday, 1 January</div>
+  </div>
+
+  <!-- FaceID scanning ring - visible briefly -->
+  <div class="faceid-ring" id="faceidRing">
+    <span class="faceid-icon">🔒</span>
+  </div>
+
+  <!-- Notifications area -->
+  <div class="lock-notifications">
+
+    <!-- Waves notification (hidden until timed reveal) -->
+    <div class="notif-card" id="wavesNotif" onclick="expandNotif()">
+      <div class="notif-icon-wrap">
+        <div class="notif-icon-fallback" id="notifIconEl">〜</div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-app-row">
+          <span class="notif-app-name">Waves by ClearWay</span>
+          <span class="notif-time-ago">now</span>
+        </div>
+        <div class="notif-title" id="notifTitle">Event ending soon</div>
+        <div class="notif-message" id="notifMsg">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Expanded actions (hidden inside same card via CSS) -->
+    <div id="notifExpandedActions" style="display:none; padding: 8px 14px 4px; position:relative; z-index:3;">
+      <div style="display:flex; gap:8px; width:100%;">
+        <button class="notif-action-btn primary" onclick="goToVideo()">View traffic info →</button>
+        <button class="notif-action-btn" onclick="dismissNotif()">Dismiss</button>
+      </div>
+      <div style="font-size:.68rem;color:rgba(255,255,255,.45);text-align:center;margin-top:8px;">
+        Swipe up to unlock your phone
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Swipe hint at bottom -->
+  <div class="lock-swipe-hint">
+    <div class="lock-swipe-line"></div>
+    <div class="lock-swipe-text">SWIPE UP TO UNLOCK</div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2 – Video
+═══════════════════════════════════════════════════ -->
+<div id="screen-video" class="screen hidden">
+  <div class="video-wrap" id="videoWrap"></div>
+  <div class="video-footer">
+    <button class="video-btn video-btn-secondary" onclick="showScreen('screen-lock')">← Back</button>
+    <button class="video-btn video-btn-primary"   onclick="restartFlow()">Restart →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════ -->
+<script>
+/* ── Helpers ────────────────────────────────────── */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.toggle('visible', s.id===id);
+    s.classList.toggle('hidden',  s.id!==id);
+  });
+}
+
+/* ── Live clock ─────────────────────────────────── */
+function updateClock(){
+  const now  = new Date();
+  const hh   = String(now.getHours()).padStart(2,'0');
+  const mm   = String(now.getMinutes()).padStart(2,'0');
+  const timeStr = `${hh}:${mm}`;
+  const days  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months= ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+  ['lockTimeBig','lockStatusTime'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent=timeStr;
+  });
+  const dl=document.getElementById('lockDateLine'); if(dl) dl.textContent=dateStr;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+/* ── Card setup ─────────────────────────────────── */
+function init(){
+  const pngArea = document.getElementById('cardPngArea');
+  if(CARD_PNG_URL){
+    pngArea.innerHTML=`<img src="${CARD_PNG_URL}" alt="Resident Card" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+  } else {
+    pngArea.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;height:100%;background:var(--surface2);';
+    pngArea.innerHTML='<div style="font-size:3rem;opacity:.3;">🪪</div><div style="font-size:.75rem;color:var(--muted2);text-align:center;padding:0 1.5rem;line-height:1.5;">Set <code style=\'font-size:.7rem;color:var(--accent);\'>CARD_PNG_URL</code></div>';
+  }
+  const backArea = document.getElementById('cardBackPngArea');
+  if(CARD_BACK_PNG_URL){
+    backArea.innerHTML=`<img src="${CARD_BACK_PNG_URL}" alt="Card back" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+  }
+
+  /* Notification content */
+  const mins = EVENT_MINUTES;
+  document.getElementById('notifTitle').textContent = `Hi ${RESIDENT_NAME}! Heads up 👋`;
+  document.getElementById('notifMsg').textContent =
+    `${EVENT_NAME} is ending in about ${mins} minute${mins!==1?'s':''}. Thanks to a new wave release strategy, attendees will be leaving in smaller groups over a longer period — so traffic congestion in your area will be reduced compared to previous events.`;
+
+  /* Try to load custom icon */
+  const iconEl = document.getElementById('notifIconEl');
+  if(NOTIFICATION_ICON){
+    const tryExts = ['png','jpg','jpeg','svg','webp'];
+    let loaded = false;
+    function tryNext(i){
+      if(i>=tryExts.length||loaded) return;
+      const img=new Image();
+      img.onload=()=>{
+        if(loaded) return; loaded=true;
+        iconEl.innerHTML=`<img src="${NOTIFICATION_ICON}.${tryExts[i]}" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;">`;
+      };
+      img.onerror=()=>tryNext(i+1);
+      img.src=`${NOTIFICATION_ICON}.${tryExts[i]}`;
+    }
+    tryNext(0);
+  }
+}
+
+/* ── Card flip → lock screen ────────────────────── */
+function flipCard(){
+  const inner=document.getElementById('cardInner');
+  inner.classList.add('flipped');
+  setTimeout(()=>{
+    showScreen('screen-lock');
+    setTimeout(()=>revealNotification(), 1200);
+  }, 500);
+}
+
+/* ── Notification entrance sequence ────────────── */
+function revealNotification(){
+  /* FaceID scanning effect */
+  const ring = document.getElementById('faceidRing');
+  ring.classList.add('show');
+  setTimeout(()=>{
+    ring.classList.remove('show');
+    /* drop in the notification */
+    const notif = document.getElementById('wavesNotif');
+    notif.classList.add('show');
+  }, 1400);
+}
+
+/* ── Tap notification to expand ─────────────────── */
+let expanded = false;
+function expandNotif(){
+  if(expanded) return;
+  expanded = true;
+  const notif   = document.getElementById('wavesNotif');
+  const actions = document.getElementById('notifExpandedActions');
+  notif.style.borderRadius    = '18px 18px 0 0';
+  notif.style.borderBottom    = 'none';
+  actions.style.display       = 'flex';
+  actions.style.flexDirection = 'column';
+  /* re-wrap in a grouped card feel */
+  const group = document.createElement('div');
+  group.style.cssText = `
+    background: rgba(255,255,255,.18);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
+  `;
+  notif.parentNode.insertBefore(group, notif);
+  notif.style.background    = 'transparent';
+  notif.style.border        = 'none';
+  notif.style.boxShadow     = 'none';
+  notif.style.borderRadius  = '18px 18px 0 0';
+  group.appendChild(notif);
+  group.appendChild(actions);
+}
+
+function dismissNotif(){
+  const notif = document.getElementById('wavesNotif');
+  const actions = document.getElementById('notifExpandedActions');
+  const parent = notif.parentNode;
+  parent.style.transition = 'opacity .3s, transform .3s';
+  parent.style.opacity    = '0';
+  parent.style.transform  = 'translateX(80px)';
+  setTimeout(()=>parent.remove(), 350);
+}
+
+/* ── Video screen ────────────────────────────────── */
+function goToVideo(){
+  showScreen('screen-video');
+  buildVideoScreen();
+}
+
+function buildVideoScreen(){
+  const wrap=document.getElementById('videoWrap');
+  if(LEAVE_VIDEO_URL){
+    const isYT=LEAVE_VIDEO_URL.includes('youtube.com')||LEAVE_VIDEO_URL.includes('youtu.be');
+    if(isYT){
+      wrap.innerHTML=`<iframe class="video-iframe" src="${LEAVE_VIDEO_URL}" title="Waves traffic video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+    } else {
+      wrap.innerHTML=`<video class="video-iframe" src="${LEAVE_VIDEO_URL}" autoplay controls playsinline></video>`;
+    }
+  } else {
+    wrap.innerHTML=`
+      <div class="video-placeholder">
+        <div class="video-placeholder-icon">🎬</div>
+        <div class="video-placeholder-text">Set <code>LEAVE_VIDEO_URL</code> to display your traffic simulation video.</div>
+        <div class="video-placeholder-code">const LEAVE_VIDEO_URL = 'videos/my-video.mp4';</div>
+      </div>`;
+  }
+}
+
+/* ── Restart ─────────────────────────────────────── */
+function restartFlow(){
+  expanded = false;
+  /* Reset card */
+  const inner=document.getElementById('cardInner');
+  inner.style.transition='none'; inner.classList.remove('flipped');
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ inner.style.transition=''; }); });
+  /* Reset notification */
+  const notif=document.getElementById('wavesNotif');
+  notif.classList.remove('show');
+  notif.style.cssText='';
+  const actions=document.getElementById('notifExpandedActions');
+  actions.style.display='none';
+  /* If they were wrapped in a group div, unwrap */
+  const group=notif.closest('div[style*="backdrop-filter"]');
+  if(group&&group!==notif){
+    const parent=group.parentNode;
+    parent.insertBefore(notif,group);
+    parent.insertBefore(actions,group);
+    group.remove();
+  }
+  document.getElementById('faceidRing').classList.remove('show');
+  showScreen('screen-card');
+}
+
+/* ── Boot ────────────────────────────────────────── */
+init();
+</script>
+</body>
+</html>

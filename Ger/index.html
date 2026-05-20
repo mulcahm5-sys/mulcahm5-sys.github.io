@@ -25,7 +25,8 @@ const EVENT_MINUTES      = 10;
 const NOTIFICATION_ICON  = 'images/icon';          /* path without extension */
 const CARD_PNG_URL       = 'images/Card.png';
 const CARD_BACK_PNG_URL  = 'images/Card_Back.png';
-const LEAVE_VIDEO_URL    = 'images/persona_commuter.mp4';
+const LEAVE_VIDEO_URL  = 'images/2persona_local_map.mp4';
+const LEAVE_VIDEO_URL2  = 'images/persona_local_wave_map.mp4';
 </script>
 
 <style>
@@ -777,6 +778,10 @@ function buildVideoScreen(){
       ? `<iframe class="video-iframe" src="${LEAVE_VIDEO_URL}" title="Traffic simulation" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
       : `<video class="video-iframe" src="${LEAVE_VIDEO_URL}" muted loop controls playsinline></video>`;
 
+    const mediaHtml2 = isYT
+      ? `<iframe class="video-iframe" src="${LEAVE_VIDEO_URL2}" title="Traffic simulation" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
+      : `<video class="video-iframe" src="${LEAVE_VIDEO_URL2}" muted loop controls playsinline></video>`;
+
     wrap.innerHTML = `
       <div class="video-container">
         <div class="video-label">Before Waves</div>
@@ -784,7 +789,7 @@ function buildVideoScreen(){
       </div>
       <div class="video-container">
         <div class="video-label">With Waves</div>
-        ${mediaHtml}
+        ${mediaHtml2}
       </div>
     `;
 

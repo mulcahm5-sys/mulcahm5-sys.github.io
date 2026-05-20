@@ -1686,7 +1686,7 @@ h2 { color: var(--text); }
       <div class="recap-price"><div class="recap-price-label" id="recapQtyLabel">1 ticket</div><div class="recap-price-val" id="recapTotal">€0</div></div>
     </div>
     <div class="info-note" id="step3Note"></div>
-    <div class="eco-inline">By choosing a later departure, you help reduce exit congestion and lower transport emissions. <strong>Staggered departures can cut vehicle idle time by up to 70%</strong>, significantly reducing CO2 output at the venue.</div>
+    <div class="eco-inline">By choosing a later departure, you help reduce exit congestion and lower transport emissions. <strong>Staggered departures can cut vehicle idle time by up to 73%</strong>, significantly reducing CO2 output at the venue.</div>
     <div class="incentive-tabs">
       <button class="tab-btn refund-tab active" id="tabRefund"  onclick="switchTab('refund')">Partial Refund</button>
       <button class="tab-btn voucher-tab"       id="tabVoucher" onclick="switchTab('voucher')">Food &amp; Drink Voucher</button>
@@ -1773,7 +1773,7 @@ h2 { color: var(--text); }
       </div>
       <div class="eco-note">
         <strong>How this is calculated:</strong> When all attendees leave simultaneously, vehicles queue at exit points causing 20-30 min of idle time per car. Staggering departures spreads this load.
-        We estimate 60% of attendees arrive by private vehicle (1.8 occupants/car avg). Each staggered attendee reduces their vehicle's idle time by ~70% of their wait duration.
+        We estimate 60% of attendees arrive by private vehicle (1.8 occupants/car avg). Each staggered attendee reduces their vehicle's idle time by ~73% of their wait duration.
         CO2 savings use the EPA figure of <strong>0.03 kg CO2 per minute of idling</strong> per passenger vehicle. Tree equivalence uses 21.77 kg CO2 absorbed per tree per year (European Environment Agency).
         Congestion time saved = (vehicles) x (idle minutes avoided). Avg exit time = baseline 25 min minus the proportional reduction from staggering.
       </div>
@@ -2244,8 +2244,8 @@ function applyLocaleTexts(){
   const ecoInline=document.querySelector('#page3 .eco-inline');
   if(ecoInline){
     ecoInline.innerHTML=tr(
-      'By choosing a later departure, you help reduce exit congestion and lower transport emissions. <strong>Staggered departures can cut vehicle idle time by up to 70%</strong>, significantly reducing CO2 output at the venue.',
-      'Ao escolher uma saída mais tarde, você ajuda a reduzir congestionamento na saída e emissões do transporte. <strong>Saídas escalonadas podem reduzir o tempo de marcha lenta dos veículos em até 70%</strong>, diminuindo significativamente o CO2 no local.'
+      'By choosing a later departure, you help reduce exit congestion and lower transport emissions. <strong>Staggered departures can cut vehicle idle time by up to 73%</strong>, significantly reducing CO2 output at the venue.',
+      'Ao escolher uma saída mais tarde, você ajuda a reduzir congestionamento na saída e emissões do transporte. <strong>Saídas escalonadas podem reduzir o tempo de marcha lenta dos veículos em até 73%</strong>, diminuindo significativamente o CO2 no local.'
     );
   }
 
@@ -2850,11 +2850,11 @@ function renderAnalytics(){
 
   // Emissions & congestion calculations
   // Model: baseline exit = ~25 min idle per vehicle when everyone leaves at once
-  // Staggered attendees reduce their vehicle's idle by 70% of their personal wait time
+  // Staggered attendees reduce their vehicle's idle by 73% of their personal wait time
   // because later waves face near-zero queue vs the 25-min baseline
   const vehicleRatio=0.6, occupantsPerCar=1.8, co2PerIdleMin=0.03, baselineIdleMin=25;
   const estVehicles=Math.max(1,Math.round(total*vehicleRatio/occupantsPerCar));
-  // idle saved per vehicle = 70% of avg incentive-taker wait (capped at baseline)
+  // idle saved per vehicle = 73% of avg incentive-taker wait (capped at baseline)
   const idleSavedPerVehicle=withInc.length?Math.min(baselineIdleMin,Math.round(avgMins*0.7)):0;
   // Only incentive-taking vehicles save idle time
   const incentiveVehicles=Math.round(withInc.length*vehicleRatio/occupantsPerCar);

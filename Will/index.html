@@ -9,14 +9,14 @@
 <!-- ┌──────────────────────────────────────────────────────────────────┐
      │  WAVES BY CLEARWAY - Resident NFC Persona Card                  │
      │                                                                  │
-     │  CONFIG: edit the constants below per event / resident.         │
+     │  CONFIG: edit the constants below per event / resident.          │
      │                                                                  │
-     │  RESIDENT_NAME  : first name shown in the notification          │
-     │  EVENT_NAME     : short event name shown in notification        │
-     │  EVENT_MINUTES  : how many minutes until event ends             │
-     │  CARD_PNG_URL   : front face of physical NFC card               │
-     │  CARD_BACK_PNG_URL : rear face of physical NFC card             │
-     │  LEAVE_VIDEO_URL: YouTube embed or local .mp4 path              │
+     │  RESIDENT_NAME  : first name shown in the notification           │
+     │  EVENT_NAME     : short event name shown in notification         │
+     │  EVENT_MINUTES  : how many minutes until event ends              │
+     │  CARD_PNG_URL   : front face of physical NFC card                │
+     │  CARD_BACK_PNG_URL : rear face of physical NFC card              │
+     │  LEAVE_VIDEO_URL: YouTube embed or local .mp4 path               │
      └──────────────────────────────────────────────────────────────────┘ -->
 <script>
 const RESIDENT_NAME      = 'Will';
@@ -297,21 +297,28 @@ html, body {
   font-size: .7rem; color: rgba(255,255,255,.45); letter-spacing: .05em;
 }
 
-/* FaceID ring animation for a moment before showing notification */
+/* FaceID ring configuration */
 .faceid-ring {
-  position: relative; z-index: 2;
-  width: 56px; height: 56px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.2);
+  position: relative; z-index: 5;
+  width: 58px; height: 58px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.25);
   margin: 20px auto 0;
   display: flex; align-items: center; justify-content: center;
   opacity: 0;
-  transition: opacity .3s;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity .3s, transform 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 .faceid-ring.show { opacity: 1; }
-.faceid-ring::before {
+.faceid-ring:active { transform: scale(0.92); background: rgba(255,255,255,0.15); }
+
+.faceid-ring.pulse-scanning::before {
   content: '';
   position: absolute; inset: -6px; border-radius: 50%;
-  border: 1.5px solid rgba(139,92,246,.5);
+  border: 1.5px solid rgba(139,92,246,.6);
   animation: faceIdScan 1.6s ease-in-out infinite;
 }
 @keyframes faceIdScan {
@@ -319,7 +326,7 @@ html, body {
   50%  { opacity: 1; }
   100% { transform: scale(1.3); opacity: 0; }
 }
-.faceid-icon { font-size: 1.2rem; opacity: .6; }
+.faceid-icon { font-size: 1.25rem; opacity: .85; transition: transform 0.3s; }
 
 /* status bar icons */
 .sb-time { font-size: .75rem; font-weight: 600; color: rgba(255,255,255,.9); }
@@ -328,43 +335,155 @@ html, body {
 
 /* ─── SCREEN 2: VIDEO ──────────────────────────────────────── */
 #screen-video {
-  background: #000; align-items: center; justify-content: center;
+  background: #000; 
+  align-items: center; 
+  justify-content: flex-start;
+  overflow-y: auto;
 }
 .video-wrap {
-  width: 100%; flex: 1; position: relative;
-  display: flex; align-items: center; justify-content: center;
+  width: 100%; 
+  flex: 1; 
+  position: relative;
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px;
+  padding: max(20px, env(safe-area-inset-top)) 16px 16px;
+  box-sizing: border-box;
+}
+.video-container {
+  display: flex;
   flex-direction: column;
+  gap: 8px;
+  width: 100%;
 }
-.video-placeholder {
-  width: 100%; max-width: 420px; padding: 2rem 1.5rem;
-  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem;
+.video-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
 }
-.video-placeholder-icon { font-size: 3.5rem; opacity: .4; }
-.video-placeholder-text { font-size: .85rem; color: rgba(255,255,255,.4); line-height: 1.6; max-width: 280px; }
-.video-placeholder-code {
-  font-size: .72rem; color: var(--accent); font-family: monospace;
-  background: rgba(139,92,246,.1); padding: .3rem .75rem;
-  border-radius: 6px; border: 1px solid rgba(139,92,246,.25);
-  text-align: left; white-space: pre; overflow-x: auto; width: 100%;
+.video-iframe { 
+  width: 100%; 
+  height: 44vw; 
+  max-height: 32vh; 
+  border-radius: 12px;
+  border: none; 
+  background: #111;
 }
-.video-iframe { width: 100%; height: 56vw; max-height: 70vh; border: none; }
 .video-footer {
   width: 100%; padding: 1rem;
-  background: rgba(0,0,0,.7); border-top: 1px solid rgba(255,255,255,.1);
-  display: flex; gap: .6rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex; justify-content: center;
+  z-index: 10;
 }
 .video-btn {
-  flex: 1; padding: .65rem;
-  border-radius: 8px; font-family: 'DM Sans', sans-serif;
-  font-size: .8rem; font-weight: 600; cursor: pointer; border: none;
+  width: 100%; max-width: 340px; padding: .75rem;
+  border-radius: 10px; font-family: 'DM Sans', sans-serif;
+  font-size: .85rem; font-weight: 600; cursor: pointer; border: none;
 }
-.video-btn-secondary { background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); }
-.video-btn-primary   { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+.video-btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
 
-/* ─── MISC ANIMATIONS ──────────────────────────────────────── */
-@keyframes cardPulse {
-  0%,100% { box-shadow: 0 6px 20px rgba(139,92,246,.4); }
-  50%      { box-shadow: 0 6px 28px rgba(34,211,238,.5); }
+.video-placeholder {
+  width: 100%; padding: 1.5rem;
+  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  background: #111; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.2);
+}
+.video-placeholder-icon { font-size: 2rem; opacity: .4; }
+.video-placeholder-text { font-size: .75rem; color: rgba(255,255,255,0.4); }
+
+/* ─── SCREEN 3: SPLASH SCREEN (White Background Minimalist) ─── */
+#screen-splash {
+  background: #ffffff;
+  align-items: center;
+  justify-content: center;
+  color: #111111;
+  text-align: center;
+}
+.splash-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  width: 100%;
+}
+.splash-logo-circle {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.4rem;
+  color: #ffffff;
+  margin-bottom: 2rem;
+  box-shadow: 0 12px 30px rgba(139, 92, 246, 0.25);
+  position: relative;
+}
+.splash-logo-circle::after {
+  content: '';
+  position: absolute; inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 211, 238, 0.4);
+  animation: splashPulse 2.5s infinite;
+}
+@keyframes splashPulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.22); opacity: 0; }
+}
+.splash-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 2.2rem;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+  color: #111111;
+  line-height: 1.2;
+}
+.splash-credits-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted2);
+  margin-bottom: 0.6rem;
+}
+.splash-names-list {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.6;
+  max-width: 280px;
+  margin-bottom: 2.5rem;
+}
+.splash-email-link {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--accent);
+  padding-bottom: 2px;
+  margin-bottom: 4rem;
+  transition: opacity 0.15s;
+}
+.splash-email-link:hover, .splash-email-link:focus {
+  opacity: 0.8;
+}
+.splash-btn-reset {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 0.75rem 2.2rem;
+  border-radius: 25px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.splash-btn-reset:active {
+  background: #e2e8f0;
+  transform: scale(0.97);
 }
 </style>
 </head>
@@ -412,15 +531,15 @@ html, body {
     <div class="lock-date-line" id="lockDateLine">Monday, 1 January</div>
   </div>
 
-  <!-- FaceID scanning ring - visible briefly -->
-  <div class="faceid-ring" id="faceidRing">
-    <span class="faceid-icon">🔒</span>
+  <!-- Interactive FaceID lock icon -->
+  <div class="faceid-ring" id="faceidRing" onclick="processLockClick()">
+    <span class="faceid-icon" id="lockEmoji">🔒</span>
   </div>
 
   <!-- Notifications area -->
   <div class="lock-notifications">
 
-    <!-- Waves notification (hidden until timed reveal) -->
+    <!-- Waves notification (hidden until explicit lock tap) -->
     <div class="notif-card" id="wavesNotif" onclick="expandNotif()">
       <div class="notif-icon-wrap">
         <div class="notif-icon-fallback" id="notifIconEl">〜</div>
@@ -435,14 +554,14 @@ html, body {
       </div>
     </div>
 
-    <!-- Expanded actions (hidden inside same card via CSS) -->
+    <!-- Expanded actions -->
     <div id="notifExpandedActions" style="display:none; padding: 8px 14px 4px; position:relative; z-index:3;">
       <div style="display:flex; gap:8px; width:100%;">
         <button class="notif-action-btn primary" onclick="goToVideo()">View traffic info →</button>
         <button class="notif-action-btn" onclick="dismissNotif()">Dismiss</button>
       </div>
       <div style="font-size:.68rem;color:rgba(255,255,255,.45);text-align:center;margin-top:8px;">
-        Tap to unlock your phone
+        Tap to view traffic forecasts
       </div>
     </div>
 
@@ -451,7 +570,7 @@ html, body {
   <!-- Swipe hint at bottom -->
   <div class="lock-swipe-hint">
     <div class="lock-swipe-line"></div>
-    <div class="lock-swipe-text">TAP TO UNLOCK</div>
+    <div class="lock-swipe-text" id="swipeTextHint">TAP LOCK TO OPEN PHONE</div>
   </div>
 
 </div>
@@ -462,8 +581,32 @@ html, body {
 <div id="screen-video" class="screen hidden">
   <div class="video-wrap" id="videoWrap"></div>
   <div class="video-footer">
-    <button class="video-btn video-btn-secondary" onclick="showScreen('screen-lock')">← Back</button>
-    <button class="video-btn video-btn-primary"   onclick="restartFlow()">Restart →</button>
+    <button class="video-btn video-btn-primary" onclick="goToSplash()">Finish</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 3 – Splash Screen (White Theme Layout)
+═══════════════════════════════════════════════════ -->
+<div id="screen-splash" class="screen hidden">
+  <div class="splash-container">
+    <div class="splash-logo-circle" style="width: 150px; height: 150px; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 8px 24px rgba(0,0,0,0.05);">
+      <img src="images/icon.png" alt="Logo" style="width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;">
+    </div>
+    
+    <h1 class="splash-title">Time well spent</h1>
+    
+    <div class="splash-credits-title">Developed By</div>
+    <div class="splash-names-list">
+      Matthew Mulcahy<br>
+      Craig Gillespie<br>
+      Mark Brady<br>
+      Ashvin Pandey
+    </div>
+    
+    <a href="mailto:Clearway@gmail.com" class="splash-email-link">Clearway@gmail.com</a>
+    
+    <button class="splash-btn-reset" onclick="restartFlow()">Reset Demo</button>
   </div>
 </div>
 
@@ -471,6 +614,10 @@ html, body {
      JAVASCRIPT
 ═══════════════════════════════════════════════════ -->
 <script>
+/* ── State Lockouts ────────────────────────────── */
+let lockClicked = false;
+let expanded = false;
+
 /* ── Helpers ────────────────────────────────────── */
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>{
@@ -541,25 +688,37 @@ function flipCard(){
   inner.classList.add('flipped');
   setTimeout(()=>{
     showScreen('screen-lock');
-    setTimeout(()=>revealNotification(), 1200);
+    document.getElementById('faceidRing').classList.add('show');
   }, 500);
 }
 
-/* ── Notification entrance sequence ────────────── */
-function revealNotification(){
-  /* FaceID scanning effect */
+/* ── Tap lock emoji execution ───────────────────── */
+function processLockClick() {
+  if (lockClicked) return;
+  lockClicked = true;
+
   const ring = document.getElementById('faceidRing');
-  ring.classList.add('show');
-  setTimeout(()=>{
-    ring.classList.remove('show');
-    /* drop in the notification */
-    const notif = document.getElementById('wavesNotif');
-    notif.classList.add('show');
-  }, 1400);
+  const emoji = document.getElementById('lockEmoji');
+  const hintText = document.getElementById('swipeTextHint');
+
+  ring.classList.add('pulse-scanning');
+  hintText.textContent = "SCANNING...";
+
+  setTimeout(() => {
+    ring.classList.remove('pulse-scanning');
+    emoji.textContent = "🔓";
+    emoji.style.transform = "scale(1.15)";
+    hintText.textContent = "ACCESS GRANTED";
+    
+    setTimeout(() => {
+      const notif = document.getElementById('wavesNotif');
+      notif.classList.add('show');
+    }, 450);
+
+  }, 1200);
 }
 
 /* ── Tap notification to expand ─────────────────── */
-let expanded = false;
 function expandNotif(){
   if(expanded) return;
   expanded = true;
@@ -569,7 +728,7 @@ function expandNotif(){
   notif.style.borderBottom    = 'none';
   actions.style.display       = 'flex';
   actions.style.flexDirection = 'column';
-  /* re-wrap in a grouped card feel */
+  
   const group = document.createElement('div');
   group.style.cssText = `
     background: rgba(255,255,255,.18);
@@ -591,7 +750,6 @@ function expandNotif(){
 
 function dismissNotif(){
   const notif = document.getElementById('wavesNotif');
-  const actions = document.getElementById('notifExpandedActions');
   const parent = notif.parentNode;
   parent.style.transition = 'opacity .3s, transform .3s';
   parent.style.opacity    = '0';
@@ -599,45 +757,74 @@ function dismissNotif(){
   setTimeout(()=>parent.remove(), 350);
 }
 
-/* ── Video screen ────────────────────────────────── */
+/* ── Navigation Routing ─────────────────────────── */
 function goToVideo(){
   showScreen('screen-video');
   buildVideoScreen();
 }
 
+function goToSplash(){
+  showScreen('screen-splash');
+}
+
 function buildVideoScreen(){
-  const wrap=document.getElementById('videoWrap');
+  const wrap = document.getElementById('videoWrap');
+  
   if(LEAVE_VIDEO_URL){
-    const isYT=LEAVE_VIDEO_URL.includes('youtube.com')||LEAVE_VIDEO_URL.includes('youtu.be');
-    if(isYT){
-      wrap.innerHTML=`<iframe class="video-iframe" src="${LEAVE_VIDEO_URL}" title="Waves traffic video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-    } else {
-      wrap.innerHTML=`<video class="video-iframe" src="${LEAVE_VIDEO_URL}" autoplay controls playsinline></video>`;
+    const isYT = LEAVE_VIDEO_URL.includes('youtube.com') || LEAVE_VIDEO_URL.includes('youtu.be');
+    
+    const mediaHtml = isYT 
+      ? `<iframe class="video-iframe" src="${LEAVE_VIDEO_URL}" title="Traffic simulation" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
+      : `<video class="video-iframe" src="${LEAVE_VIDEO_URL}" muted loop controls playsinline></video>`;
+
+    wrap.innerHTML = `
+      <div class="video-container">
+        <div class="video-label">Before Waves</div>
+        ${mediaHtml}
+      </div>
+      <div class="video-container">
+        <div class="video-label">With Waves</div>
+        ${mediaHtml}
+      </div>
+    `;
+
+    if(!isYT) {
+      setTimeout(() => {
+        wrap.querySelectorAll('video').forEach(v => v.play().catch(()=>{}));
+      }, 100);
     }
+
   } else {
-    wrap.innerHTML=`
+    wrap.innerHTML = `
       <div class="video-placeholder">
         <div class="video-placeholder-icon">🎬</div>
-        <div class="video-placeholder-text">Set <code>LEAVE_VIDEO_URL</code> to display your traffic simulation video.</div>
-        <div class="video-placeholder-code">const LEAVE_VIDEO_URL = 'videos/my-video.mp4';</div>
+        <div class="video-placeholder-text">Set <code>LEAVE_VIDEO_URL</code> to play traffic simulations.</div>
       </div>`;
   }
 }
 
-/* ── Restart ─────────────────────────────────────── */
+/* ── Complete Flow Reset ─────────────────────────── */
 function restartFlow(){
   expanded = false;
-  /* Reset card */
+  lockClicked = false;
+  
   const inner=document.getElementById('cardInner');
   inner.style.transition='none'; inner.classList.remove('flipped');
   requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ inner.style.transition=''; }); });
-  /* Reset notification */
+  
+  document.getElementById('lockEmoji').textContent = "🔒";
+  document.getElementById('lockEmoji').style.transform = "";
+  document.getElementById('swipeTextHint').textContent = "TAP THE LOCK TO OPEN PHONE";
+  
+  const ring = document.getElementById('faceidRing');
+  ring.classList.remove('show', 'pulse-scanning');
+
   const notif=document.getElementById('wavesNotif');
   notif.classList.remove('show');
   notif.style.cssText='';
   const actions=document.getElementById('notifExpandedActions');
   actions.style.display='none';
-  /* If they were wrapped in a group div, unwrap */
+  
   const group=notif.closest('div[style*="backdrop-filter"]');
   if(group&&group!==notif){
     const parent=group.parentNode;
@@ -645,11 +832,11 @@ function restartFlow(){
     parent.insertBefore(actions,group);
     group.remove();
   }
-  document.getElementById('faceidRing').classList.remove('show');
+  
   showScreen('screen-card');
 }
 
-/* ── Boot ────────────────────────────────────────── */
+/* Boot application */
 init();
 </script>
 </body>

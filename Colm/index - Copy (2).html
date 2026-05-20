@@ -9,14 +9,14 @@
 <!-- ┌──────────────────────────────────────────────────────────────────┐
      │  WAVES BY CLEARWAY - Resident NFC Persona Card                  │
      │                                                                  │
-     │  CONFIG: edit the constants below per event / resident.          │
+     │  CONFIG: edit the constants below per event / resident.         │
      │                                                                  │
-     │  RESIDENT_NAME  : first name shown in the notification           │
-     │  EVENT_NAME     : short event name shown in notification         │
-     │  EVENT_MINUTES  : how many minutes until event ends              │
-     │  CARD_PNG_URL   : front face of physical NFC card                │
-     │  CARD_BACK_PNG_URL : rear face of physical NFC card              │
-     │  LEAVE_VIDEO_URL: YouTube embed or local .mp4 path               │
+     │  RESIDENT_NAME  : first name shown in the notification          │
+     │  EVENT_NAME     : short event name shown in notification        │
+     │  EVENT_MINUTES  : how many minutes until event ends             │
+     │  CARD_PNG_URL   : front face of physical NFC card               │
+     │  CARD_BACK_PNG_URL : rear face of physical NFC card             │
+     │  LEAVE_VIDEO_URL: YouTube embed or local .mp4 path              │
      └──────────────────────────────────────────────────────────────────┘ -->
 <script>
 const RESIDENT_NAME      = 'Colm';
@@ -328,65 +328,38 @@ html, body {
 
 /* ─── SCREEN 2: VIDEO ──────────────────────────────────────── */
 #screen-video {
-  background: #000; 
-  align-items: center; 
-  justify-content: flex-start;
-  overflow-y: auto;
+  background: #000; align-items: center; justify-content: center;
 }
 .video-wrap {
-  width: 100%; 
-  flex: 1; 
-  position: relative;
-  display: flex; 
-  flex-direction: column; 
-  gap: 16px;
-  padding: max(20px, env(safe-area-inset-top)) 16px 16px;
-  box-sizing: border-box;
-}
-.video-container {
-  display: flex;
+  width: 100%; flex: 1; position: relative;
+  display: flex; align-items: center; justify-content: center;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
 }
-.video-label {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding-left: 4px;
+.video-placeholder {
+  width: 100%; max-width: 420px; padding: 2rem 1.5rem;
+  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem;
 }
-.video-iframe { 
-  width: 100%; 
-  height: 44vw; 
-  max-height: 32vh; 
-  border-radius: 12px;
-  border: none; 
-  background: #111;
+.video-placeholder-icon { font-size: 3.5rem; opacity: .4; }
+.video-placeholder-text { font-size: .85rem; color: rgba(255,255,255,.4); line-height: 1.6; max-width: 280px; }
+.video-placeholder-code {
+  font-size: .72rem; color: var(--accent); font-family: monospace;
+  background: rgba(139,92,246,.1); padding: .3rem .75rem;
+  border-radius: 6px; border: 1px solid rgba(139,92,246,.25);
+  text-align: left; white-space: pre; overflow-x: auto; width: 100%;
 }
+.video-iframe { width: 100%; height: 56vw; max-height: 70vh; border: none; }
 .video-footer {
   width: 100%; padding: 1rem;
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  background: rgba(0, 0, 0, 0.85); border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0,0,0,.7); border-top: 1px solid rgba(255,255,255,.1);
   display: flex; gap: .6rem;
-  z-index: 10;
 }
 .video-btn {
   flex: 1; padding: .65rem;
   border-radius: 8px; font-family: 'DM Sans', sans-serif;
   font-size: .8rem; font-weight: 600; cursor: pointer; border: none;
 }
-.video-btn-secondary { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+.video-btn-secondary { background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); }
 .video-btn-primary   { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
-
-.video-placeholder {
-  width: 100%; padding: 1.5rem;
-  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
-  background: #111; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.2);
-}
-.video-placeholder-icon { font-size: 2rem; opacity: .4; }
-.video-placeholder-text { font-size: .75rem; color: rgba(255,255,255,0.4); }
 
 /* ─── MISC ANIMATIONS ──────────────────────────────────────── */
 @keyframes cardPulse {
@@ -633,41 +606,20 @@ function goToVideo(){
 }
 
 function buildVideoScreen(){
-  const wrap = document.getElementById('videoWrap');
-  
+  const wrap=document.getElementById('videoWrap');
   if(LEAVE_VIDEO_URL){
-    const isYT = LEAVE_VIDEO_URL.includes('youtube.com') || LEAVE_VIDEO_URL.includes('youtu.be');
-    
-    const mediaHtml = isYT 
-      ? `<iframe class="video-iframe" src="${LEAVE_VIDEO_URL}" title="Traffic simulation" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
-      : `<video class="video-iframe" src="${LEAVE_VIDEO_URL}" muted loop controls playsinline></video>`;
-
-    wrap.innerHTML = `
-      <!-- Video 1: Before Waves -->
-      <div class="video-container">
-        <div class="video-label">Before Waves</div>
-        ${mediaHtml}
-      </div>
-      
-      <!-- Video 2: With Waves -->
-      <div class="video-container">
-        <div class="video-label">With Waves</div>
-        ${mediaHtml}
-      </div>
-    `;
-
-    // Attempt concurrent auto-play for native MP4 files
-    if(!isYT) {
-      setTimeout(() => {
-        wrap.querySelectorAll('video').forEach(v => v.play().catch(()=>{}));
-      }, 100);
+    const isYT=LEAVE_VIDEO_URL.includes('youtube.com')||LEAVE_VIDEO_URL.includes('youtu.be');
+    if(isYT){
+      wrap.innerHTML=`<iframe class="video-iframe" src="${LEAVE_VIDEO_URL}" title="Waves traffic video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+    } else {
+      wrap.innerHTML=`<video class="video-iframe" src="${LEAVE_VIDEO_URL}" autoplay controls playsinline></video>`;
     }
-
   } else {
-    wrap.innerHTML = `
+    wrap.innerHTML=`
       <div class="video-placeholder">
         <div class="video-placeholder-icon">🎬</div>
-        <div class="video-placeholder-text">Set <code>LEAVE_VIDEO_URL</code> to display your traffic simulation videos.</div>
+        <div class="video-placeholder-text">Set <code>LEAVE_VIDEO_URL</code> to display your traffic simulation video.</div>
+        <div class="video-placeholder-code">const LEAVE_VIDEO_URL = 'videos/my-video.mp4';</div>
       </div>`;
   }
 }
